@@ -3,8 +3,6 @@ import json
 import requests
 import os
 
-
-
 class TranzyAPI:
     def __init__(self, key, agency_id=4):
         self.url = "https://api.tranzy.ai/v1/opendata"
