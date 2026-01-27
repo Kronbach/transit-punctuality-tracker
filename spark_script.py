@@ -1,4 +1,3 @@
-from delta.tables import DeltaTable
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.functions import to_date, col, current_timestamp, hour
 
@@ -39,7 +38,7 @@ def write_bronze_df(endpoints: dict[str, tuple[dict, str]]) -> dict[str, DataFra
         mapped_dataframes[name] = bronze_df
     return mapped_dataframes
 
-#TODO: In production fact tables need to read from Delta - not from memory (Dataframe).
+#In production fact tables need to read from Delta - not from memory (Dataframe). Use this workflow just for tests.
 def create_fact_vehicle_speed(spark, bronze_vehicles) -> DataFrame:
     """
     Grain: one row per vehicle per poll
@@ -66,7 +65,7 @@ def create_fact_vehicle_speed(spark, bronze_vehicles) -> DataFrame:
 
     fact.write.format("delta").mode("append").save(f"{SILVER}/fact_vehicle_position")
     return fact
-#TODO: In production, fact tables need to read from Delta - not from memory (Dataframe).
+#In production fact tables need to read from Delta - not from memory (Dataframe). Use this workflow just for tests.
 def create_fact_stop_arrival(spark, bronze_vehicles, bronze_stops, bronze_stop_times) -> DataFrame:
     """
     Grain: one row per vehicle arrival at a stop
@@ -87,7 +86,7 @@ def create_fact_stop_arrival(spark, bronze_vehicles, bronze_stops, bronze_stop_t
     stop_times.createOrReplaceTempView("stop_times")
 
  # Join: vehicle -> stop_times -> stops
- # We need this to filter the stops for every vehicle based on its current trip.
+ # I need these joins to filter the stops designated for every vehicle based on its current trip.
     joined = spark.sql("""
         SELECT 
             v.id AS vehicle_id,
@@ -145,21 +144,4 @@ def create_fact_stop_arrival(spark, bronze_vehicles, bronze_stops, bronze_stop_t
     arrivals.write.format("delta").mode("append").save(f"{SILVER}/fact_stop_arrival")
     return arrivals
 
-
-#TODO: This should be in the schedule_.py file
-while True:
-    mapped_dataframes = write_bronze_df(endpoints)
-    time.sleep(19)
-
-create_fact_stop_arrival(
-    spark=spark,
-    bronze_stops=mapped_dataframes["stops"],
-    bronze_stop_times=mapped_dataframes["stop_times"],
-    bronze_vehicles=mapped_dataframes["vehicles"]
-)
-
-create_fact_vehicle_speed(
-    spark=spark,
-    bronze_vehicles=mapped_dataframes["vehicles"]
-)
 
