@@ -3,6 +3,7 @@ import json
 import requests
 import os
 
+
 class TranzyAPI:
     def __init__(self, key, agency_id=4):
         self.url = "https://api.tranzy.ai/v1/opendata"
@@ -15,7 +16,7 @@ class TranzyAPI:
         if with_agency:
             headers["X-Agency-Id"] = str(self.agency_id)
 
-        response = requests.get(url= f"{self.url}/{endpoint}", headers=headers)
+        response = requests.get(url=f"{self.url}/{endpoint}", headers=headers)
         response.raise_for_status()
         return response.json()
 
@@ -52,6 +53,5 @@ if __name__ == "__main__":
         if i < 10:
             i += 1
             rows.append([json.dumps(item)])
-
 
     print(rows)
