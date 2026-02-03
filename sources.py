@@ -47,11 +47,11 @@ if __name__ == "__main__":
     api = TranzyAPI(os.getenv("TRANZY_KEY"))
 
     vehicle_data = api.get_vehicles()
-    i = 0
-    rows = []
-    for item in vehicle_data:
-        if i < 10:
-            i += 1
-            rows.append([json.dumps(item)])
+    # i = 0
+    # rows = []
+    # for item in vehicle_data:
+    #     if i < 10:
+    #         i += 1
+    #         rows.append([json.dumps(item)])
 
-    print(rows)
+    print(vehicle_data)
