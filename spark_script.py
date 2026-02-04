@@ -42,7 +42,7 @@ def _create_bronze_df(spark, data: dict):
     )
 
 
-def write_bronze_df(endpoints: dict[str, tuple[dict, str]]) -> dict[str, DataFrame]:
+def write_bronze_df(endpoints: dict[str, tuple[list[dict], str]]) -> dict[str, DataFrame]:
     mapped_dataframes = {}
     for name, (data, mode) in endpoints.items():
         bronze_df = _create_bronze_df(spark, data)
@@ -212,15 +212,14 @@ def create_gold(fact_vehicle_speed, fact_arrivals):
     """)
 
     inferred_schedule = spark.sql("""
-     WITH ordered_arrivals AS (
+        WITH arrivals_with_minutes AS (
         SELECT 
             fa.route_id,
             fa.stop_id,
             s.stop_name,
-            fa.vehicle_id,
             fa.date_key,
-            fa.arrival_timestamp,
-            DATE_FORMAT(fa.arrival_timestamp, 'HH:mm') as arrival_time,
+            CASE WHEN DAYOFWEEK(fa.date_key) IN (1, 7) THEN 1 ELSE 0 END as is_weekend,
+            HOUR(fa.arrival_timestamp) * 60 + MINUTE(fa.arrival_timestamp) as minutes_of_day,
             ROW_NUMBER() OVER (
                 PARTITION BY fa.route_id, fa.stop_id, fa.date_key 
                 ORDER BY fa.arrival_timestamp
@@ -232,13 +231,20 @@ def create_gold(fact_vehicle_speed, fact_arrivals):
         route_id,
         stop_id,
         stop_name,
-        vehicle_id,
-        date_key,
         trip_sequence,
-        arrival_time,
-        arrival_timestamp
-    FROM ordered_arrivals
+        is_weekend,
+        CONCAT(
+            LPAD(CAST(FLOOR(AVG(minutes_of_day) / 60) AS INT), 2, '0'),
+            ':',
+            LPAD(CAST(FLOOR(AVG(minutes_of_day) % 60) AS INT), 2, '0')
+        ) as avg_arrival_time,
+        COUNT(*) as sample_count,
+        ROUND(STDDEV(minutes_of_day), 1) as stddev_minutes
+    FROM arrivals_with_minutes
+    GROUP BY route_id, stop_id, stop_name, trip_sequence, is_weekend
+    ORDER BY route_id, stop_id, is_weekend, trip_sequence
     """)
+
 
     agg_speed_hourly.write.jdbc(
         url=os.getenv("DB_URL"),

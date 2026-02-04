@@ -3,19 +3,25 @@ import time
 from datetime import datetime
 from spark_script import *
 from helpers import _utils
+from collections import deque
 
 def _is_operating_hours():
     hour = datetime.now().hour
     # 6:00 to 23:59 OR 0:00 to 1:00
     return 6 <= hour or hour < 1
 
+buffer = deque(maxlen=100)
 
 def poll_vehicles():
     while _is_operating_hours():
-        write_bronze_df({"vehicles": (source.get_vehicles(), "append")})
+        buffer.append(source.get_vehicles())
         print(f"Polled at {datetime.now()}")
         time.sleep(25)
-
+        if len(buffer) >= 24:
+            combined = [v for batch in buffer for v in batch]
+            write_bronze_df({"vehicles": (combined, "append")})
+            buffer.clear()
+            print(f"Flushed to Bronze at {datetime.now()}", flush=True)
 
 def poll_route_planning():
     write_bronze_df(
@@ -56,13 +62,14 @@ def run_silver_to_gold():
         fact_arrivals=fact_arrivals
     )
 
-#
+
 # schedule.every().day.at("02:02", "Europe/Bucharest").do(run_bronze_to_silver)
 # schedule.every(30).days.at("01:00", "Europe/Bucharest").do(poll_route_planning)
 # schedule.every().day.at("06:00", "Europe/Bucharest").do(poll_vehicles)
 # schedule.every(7).days.at("02:30", "Europe/Bucharest").do(run_silver_to_gold)
-run_silver_to_gold()
+#
 
+poll_vehicles()
 # while True:
 #     schedule.run_pending()
 #     time.sleep(1)
