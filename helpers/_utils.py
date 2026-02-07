@@ -1,4 +1,11 @@
 from pyspark.sql.functions import current_date, date_sub, col
+from datetime import datetime
+
+
+def is_operating_hours():
+    hour = datetime.now().hour
+    # 6:00 to 23:59 OR 0:00 to 1:00
+    return 6 <= hour or hour < 1
 
 def parse_bronze_json(spark, bronze_path, table, yesterday_filter=True):
     """Parse JSON from Bronze Delta table."""
