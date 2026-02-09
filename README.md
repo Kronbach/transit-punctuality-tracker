@@ -96,8 +96,8 @@ API docs: `http://localhost:8000/docs`
 ### Installation
 ```bash
 # Clone and setup
-git clone https://github.com/yourusername/chisinau-transit-analytics.git
-cd chisinau-transit-analytics
+git clone https://github.com/yourusername/transit-punctuality-tracker.git
+cd transit-punctuality-tracker
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
