@@ -167,7 +167,7 @@ Schedule inference averages trip sequences across days. Variance increases when 
 
 ### Schedule Inference Variance
 **Problem**: Trip sequence averaging produced 400+ minute stddev when polling start times varied between days.
-**Solution**: Documented as limitation; future improvement could use time-bucket alignment or percentile-based sequencing.
+**Solution**: Solution: Documented as limitation; consistent polling start times and outlier day filtering would improve accuracy.
 
 ## Roadmap
 
