@@ -40,6 +40,8 @@ Cleaned and transformed data:
 | `dim_trips` | Trip reference data |
 | `dim_stop_times` | Stop sequence reference data |
 
+Silver tables are stored as Delta Lake (Parquet) and can be directly connected to BI tools (Power BI, Tableau) for ad-hoc analysis.
+
 ### Gold Layer
 Business-ready aggregations served via MSSQL:
 
@@ -96,8 +98,8 @@ API docs: `http://localhost:8000/docs`
 ### Installation
 ```bash
 # Clone and setup
-git clone https://github.com/yourusername/transit-punctuality-tracker.git
-cd transit-punctuality-tracker
+git clone https://github.com/yourusername/chisinau-transit-analytics.git
+cd chisinau-transit-analytics
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -162,10 +164,6 @@ Schedule inference averages trip sequences across days. Variance increases when 
 ### Delta Log Performance Degradation
 **Problem**: Write times increased from ~2s to ~90s after 2000+ commits due to transaction log overhead.
 **Solution**: Threaded buffer batches 24 polls into single write, reducing daily commits by 95%.
-
-### Phantom Speed Readings
-**Problem**: Vehicles reported movement while stationary (GPS drift).
-**Solution**: Filter speeds < 2 km/h when consecutive positions are identical.
 
 ### Schedule Inference Variance
 **Problem**: Trip sequence averaging produced 400+ minute stddev when polling start times varied between days.
